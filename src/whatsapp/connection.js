@@ -30,11 +30,11 @@ export async function startWhatsApp({onMessage}){
 
             if(qr){
                 logger.info("Escaneie o QE code com o whatsapp (Aparelhos conectados):")
-                qrcode.generate(qr, { smaill: true })
+                qrcode.generate(qr, { small: true })
             }
 
             if(connection === 'open'){
-                tentativas = 0,
+                tentativas = 0
                 logger.info('Conectado ao whatsapp')
             }
 
@@ -43,13 +43,14 @@ export async function startWhatsApp({onMessage}){
 
                 if(code === DisconnectReason.loggedOut){
                     logger.error("Sessão encerrada pelo celular. Apague auth_info/ e faça login de novo")
+                    return
                 }
 
                 const espera = Math.min(1000*2 ** tentativas, 60_000)
                 tentativas++
                 logger.warn({code, espera}, "Conexão caiu, reconectando...")
                 setTimeout(()=>{
-                    startWhatsApp([onMessage]).catch((err)=>
+                    startWhatsApp({onMessage}).catch((err)=>
                         logger.error({err}, 'Falha ao reconectar')
                     )
                 }, espera)
@@ -60,7 +61,7 @@ export async function startWhatsApp({onMessage}){
     });
 
 
-    sock.ev.on('messages.upset', async ({messages, type}) =>{
+    sock.ev.on('messages.upsert', async ({messages, type}) =>{
         try{
             if (type !== 'notify') return
             for (const msg of messages){
@@ -71,5 +72,5 @@ export async function startWhatsApp({onMessage}){
             logger.error({err}, "Erro em messages.upsert")
         }
     })
-    return
+    return sock
 }
